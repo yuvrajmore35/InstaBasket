@@ -42,7 +42,7 @@ The Smart Trolley System provides:
 
 ## 🧠 System Architecture
 The system consists of:
-- Smart Trolley Hardware (RFID Scanner, Weight Sensor, Display)
+- Smart Trolley Hardware (RFID Scanner,Display)
 - Backend Server / Firebase Database
 - Admin Portal for monitoring
 - Payment Gateway Integration
@@ -73,7 +73,7 @@ The system consists of:
 - **Frontend:** HTML, CSS, JavaScript / Touchscreen UI
 - **Backend:** Java (Spring Boot / Core Java)
 - **Database:** Firebase / MySQL
-- **Hardware:** Raspberry Pi, RFID Module, Weight Sensor
+- **Hardware:** ESP32, RFID Module, Weight Sensor
 - **Payment Integration:** UPI (Razorpay / Paytm API)
 
 ---
@@ -96,14 +96,14 @@ The system consists of:
 
 ## 👨‍💻 Team Members
 - Aaryan Randhave  
--  Yuvraj More
--   Mahesh Mane
+- Yuvraj More
+- Mahesh Mane
    
 
 ---
 
 ## 🙏 Acknowledgement
-This project was developed under the guidance and coordination of **[Guide Name]**.
+This project was developed under the guidance and coordination of Dr.Pranjali More and Prof.Ashwini Jambhale.
 
 ---
 
