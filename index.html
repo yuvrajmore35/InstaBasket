@@ -1,1 +1,187 @@
-404: Not Found
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Receipt | Instabasket</title>
+    <style>
+        :root {
+            --bg: #0a0a0c;
+            --card-bg: #16161a;
+            --accent: #3b82f6;
+            --text-p: #ffffff;
+            --text-s: #94a3b8;
+            --border: #222;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+
+        body { 
+            background: var(--bg); 
+            color: var(--text-p); 
+            display: flex; 
+            justify-content: center; 
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .receipt-container {
+            width: 100%;
+            max-width: 400px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 1px dashed #444; padding-bottom: 20px; }
+        .logo { font-size: 28px; font-weight: 800; color: var(--accent); margin-bottom: 5px; }
+        .store-id { font-size: 12px; color: var(--text-s); text-transform: uppercase; letter-spacing: 1px; }
+
+        .item-list { margin-bottom: 30px; }
+        .item { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-bottom: 15px; 
+            font-size: 16px;
+        }
+        .item-info { display: flex; flex-direction: column; }
+        .item-qty { font-size: 12px; color: var(--text-s); }
+
+        .divider { border-top: 1px solid var(--border); margin: 20px 0; }
+
+        .total-section { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            margin-top: 10px;
+        }
+        .total-label { font-size: 18px; font-weight: 600; }
+        .total-amount { font-size: 32px; font-weight: 800; color: var(--accent); }
+
+        .footer { 
+            text-align: center; 
+            margin-top: 40px; 
+            color: var(--text-s); 
+            font-size: 12px;
+        }
+        
+        .status-msg { text-align: center; padding: 20px; color: var(--text-s); }
+        .loading-spinner { border: 3px solid #333; border-top: 3px solid var(--accent); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="receipt-container" id="receiptContent">
+        <div id="loadingArea">
+            <div class="loading-spinner"></div>
+            <p class="status-msg">Fetching your digital receipt...</p>
+        </div>
+        
+        <div id="billArea" style="display: none;">
+            <div class="header">
+                <div class="logo">Instabasket</div>
+                <div class="store-id" id="displayMartId">Mart ID: --</div>
+                <p style="font-size: 14px; margin-top: 10px;" id="displayDate">--</p>
+            </div>
+
+            <div class="item-list" id="itemList">
+                </div>
+
+            <div class="divider"></div>
+
+            <div class="total-section">
+                <div class="total-label">Total Amount</div>
+                <div class="total-amount" id="displayTotal">₹0.00</div>
+            </div>
+
+            <div class="footer">
+                <p>Transaction ID: <span id="displaySaleId">--</span></p>
+                <p style="margin-top: 15px;">Thank you for shopping with us!</p>
+                <p>@instabasket.in</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Firebase Integration
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Your specific Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCCnzxKihi5R3EBXlQoRABLoH0Z-OGl2R4",
+            authDomain: "smartcart-d7f33.firebaseapp.com",
+            projectId: "smartcart-d7f33",
+            storageBucket: "smartcart-d7f33.firebasestorage.app",
+            messagingSenderId: "501090201683",
+            appId: "1:501090201683:web:d6baa4f01bd47dc0af16a6"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // --- URL PARAMETER LOGIC ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const saleId = urlParams.get('id');
+        const martId = urlParams.get('mart');
+
+        async function fetchReceipt() {
+            if (!saleId || !martId) {
+                showError("Invalid Receipt Link. Please check your QR code.");
+                return;
+            }
+
+            try {
+                // Fetch from Firestore path: marts -> {martId} -> sales -> {saleId}
+                const docRef = doc(db, "marts", martId, "sales", saleId);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    renderReceipt(docSnap.data());
+                } else {
+                    showError("Receipt not found in our database.");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                showError("Connection error. Please try again.");
+            }
+        }
+
+        function renderReceipt(data) {
+            document.getElementById('loadingArea').style.display = 'none';
+            document.getElementById('billArea').style.display = 'block';
+
+            document.getElementById('displayMartId').innerText = `Mart ID: ${martId}`;
+            document.getElementById('displaySaleId').innerText = saleId;
+            document.getElementById('displayTotal').innerText = `₹${data.total.toFixed(2)}`;
+            
+            // Format Date if it exists, otherwise use today
+            document.getElementById('displayDate').innerText = data.date || new Date().toLocaleString();
+
+            const listContainer = document.getElementById('itemList');
+            listContainer.innerHTML = data.items.map(item => `
+                <div class="item">
+                    <div class="item-info">
+                        <span>${item.name}</span>
+                        <span class="item-qty">Qty: ${item.qty}</span>
+                    </div>
+                    <span>₹${(item.price * item.qty).toFixed(2)}</span>
+                </div>
+            `).join('');
+        }
+
+        function showError(msg) {
+            document.getElementById('loadingArea').innerHTML = `
+                <p style="color: #ef4444; text-align:center;">${msg}</p>
+                <button onclick="location.reload()" style="margin-top:20px; background:#222; color:white; border:none; padding:10px 20px; border-radius:10px;">Retry</button>
+            `;
+        }
+
+        // Start fetching on load
+        fetchReceipt();
+    </script>
+</body>
+</html>
